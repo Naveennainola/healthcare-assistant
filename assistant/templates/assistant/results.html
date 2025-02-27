@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnosis Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(to right, #a8c0ff, #3f2b96);
+            color: white;
+        }
+        .result-box {
+            border: 2px solid #007bff;
+            padding: 20px;
+            margin: 20px auto;
+            width: 60%;
+            background-color: white;
+            color: black;
+            box-shadow: 0px 0px 10px #007bff;
+            border-radius: 8px;
+            text-align: left;
+        }
+        h2 {
+            color: #3f2b96;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            background: #f0f0f0;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        a, button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 20px;
+            text-decoration: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Diagnosis Results</h1>
+
+    <div class="result-box">
+        <h2>Predicted Diseases:</h2>
+        <ul>
+            {% for item in predictions %}
+                <li><strong>{{ item.disease }}</strong> - Confidence: {{ item.confidence }}</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Description:</h2>
+        <p>{{ description }}</p>
+
+        <h2>Precautions:</h2>
+        <ul>
+            {% for precaution in precautions %}
+                <li>{{ precaution }}</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Is this prediction correct?</h2>
+        <form method="POST" action="/submit_feedback">
+            {% csrf_token %}
+            <input type="hidden" name="user_symptoms" value="{{ symptoms|join:',' }}">
+            <input type="hidden" name="predicted_disease" value="{{ predictions.0.disease }}">
+
+            <h3>Debug: List of all diseases</h3>
+            <p>{{ all_diseases }}</p>
+            <label for="correct_disease">If incorrect, select the correct disease:</label>
+            <select name="correct_disease" required>
+                <option value="" disabled selected>Select correct disease</option>
+                {% for disease in all_diseases %}
+                    <option value="{{ disease }}">{{ disease }}</option>
+                {% empty %}
+                    <option value="" disabled>No Diseases available</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Submit Feedback</button>
+        </form>
+    </div>
+
+    <a href="{% url 'index' %}">Back to Home</a>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Healthcare Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #a8c0ff, #3f2b96);
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            color: black;
+            padding: 30px;
+            max-width: 500px;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+        }
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            border: 1px solid #ccc;
+            padding: 5px;
+            min-height: 40px;
+            background: #f8f8f8;
+            cursor: text;
+            align-items: center;
+            position: relative;
+        }
+        .tag {
+            background: #3f2b96;
+            color: white;
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .tag .remove-tag {
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #symptom-search {
+            border: none;
+            outline: none;
+            flex: 1;
+            padding: 5px;
+            min-width: 120px;
+            background: transparent;
+        }
+        .suggestions {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            background: white;
+            display: none;
+            position: absolute;
+            width: 100%;
+            text-align: left;
+            z-index: 10;
+            top: 100%;
+            left: 0;
+        }
+        .suggestions div {
+            padding: 8px;
+            cursor: pointer;
+        }
+        .suggestions div:hover {
+            background: #dcdcdc;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none;
+            background: #3f2b96;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #record-btn {
+            background: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Healthcare Assistant</h1>
+
+    <div class="container">
+        <h2>Enter Your Symptoms</h2>
+
+        <label for="symptom-search">Type Symptoms:</label>
+        <div class="tag-input-container" onclick="document.getElementById('symptom-search').focus();">
+            <div id="selected-tags"></div>
+            <input type="text" id="symptom-search" placeholder="Start typing..." oninput="showSuggestions(event)">
+            <div class="suggestions" id="suggestion-box"></div>
+        </div>
+
+        <form method="POST" action="{% url 'analyze_symptoms' %}">
+            {% csrf_token %}
+            <input type="hidden" name="symptoms" id="selected-symptoms">
+            <button type="submit">Analyze Symptoms</button>
+        </form>
+
+        <div>OR</div>
+        <button id="record-btn">🎤 Speak Symptoms</button>
+    </div>
+
+    <script>
+        let symptomsList = [{% for symptom in symptoms %}"{{ symptom }}",{% endfor %}];
+        let selectedSymptoms = [];
+
+        function showSuggestions(event) {
+            let input = event.target.value.toLowerCase();
+            let suggestionBox = document.getElementById("suggestion-box");
+            suggestionBox.innerHTML = "";
+            if (!input) {
+                suggestionBox.style.display = "none";
+                return;
+            }
+            let matches = symptomsList.filter(s => s.toLowerCase().includes(input) && !selectedSymptoms.includes(s));
+            matches.forEach(m => {
+                let div = document.createElement("div");
+                div.textContent = m;
+                div.onclick = () => addSymptom(m);
+                suggestionBox.appendChild(div);
+            });
+            suggestionBox.style.display = matches.length ? "block" : "none";
+        }
+
+        function addSymptom(symptom) {
+            if (!selectedSymptoms.includes(symptom)) {
+                selectedSymptoms.push(symptom);
+                updateTags();
+            }
+            document.getElementById("symptom-search").value = "";
+            document.getElementById("suggestion-box").style.display = "none";
+        }
+
+        function updateTags() {
+            let container = document.getElementById("selected-tags");
+            container.innerHTML = "";
+            selectedSymptoms.forEach(symptom => {
+                let tag = document.createElement("div");
+                tag.className = "tag";
+                tag.innerHTML = `${symptom} <span class="remove-tag" onclick="removeSymptom('${symptom}')">x</span>`;
+                container.appendChild(tag);
+            });
+            document.getElementById("selected-symptoms").value = selectedSymptoms.join(",");
+        }
+
+        function removeSymptom(symptom) {
+            selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+            updateTags();
+        }
+    </script>
+
+</body>
+</html>
