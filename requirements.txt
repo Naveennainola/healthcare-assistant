@@ -1,0 +1,11 @@
+django
+djangorestframework
+openai
+spacy
+torch
+transformers
+pandas
+scikit-learn
+numpy
+speechrecognition
+pydub
